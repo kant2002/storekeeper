@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreKeeper", "StoreKeeper\StoreKeeper.csproj", "{03AEE6BC-A6D1-432B-93EA-31A44DF638C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreKeeper.Tests", "StoreKeeper.Tests\StoreKeeper.Tests.csproj", "{6534DE81-2E99-4C14-AF01-57F2A74B6919}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03AEE6BC-A6D1-432B-93EA-31A44DF638C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03AEE6BC-A6D1-432B-93EA-31A44DF638C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03AEE6BC-A6D1-432B-93EA-31A44DF638C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03AEE6BC-A6D1-432B-93EA-31A44DF638C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6534DE81-2E99-4C14-AF01-57F2A74B6919}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6534DE81-2E99-4C14-AF01-57F2A74B6919}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6534DE81-2E99-4C14-AF01-57F2A74B6919}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6534DE81-2E99-4C14-AF01-57F2A74B6919}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
