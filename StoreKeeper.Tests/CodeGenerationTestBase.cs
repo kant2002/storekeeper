@@ -38,7 +38,8 @@ public class CodeGenerationTestBase
 
         // var compileDiagnostics = compilation.GetDiagnostics();
         // Assert.IsFalse(compileDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error), "Failed: " + compileDiagnostics.FirstOrDefault()?.GetMessage());
-        ISourceGenerator generator = new Generator();
+        var generator = new Generator();
+        generator.GenerateHeaders = false;
 
         var driver = CSharpGeneratorDriver.Create(generator);
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var generateDiagnostics);

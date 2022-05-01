@@ -6,5 +6,5 @@
 
 internal interface IGreeting
 {
-    void SayHello(string name);
+    string SayHello(string name);
 }
