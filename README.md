@@ -21,6 +21,7 @@ To run test suite
 - [ ] Support for `BuildServiceProvider`
 - [ ] Support for `IEnumerable<T>` services
 - [ ] Dynamic registration of services.
+- [ ] Registrations across assemblies
 
 # Usage example
 
