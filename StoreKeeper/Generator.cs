@@ -102,7 +102,24 @@ public static class StoreKeeperExtensions
         builder.PushIndent();
         builder.AppendLine("public IServiceProvider ServiceProvider => this;");
         builder.AppendLine();
-        builder.AppendLine("public void Dispose() {}");
+        builder.AppendLine("public void Dispose()");
+        builder.AppendLine("{");
+        builder.PushIndent();
+        foreach (var descriptor in descriptors.Where(_ => _.IsDisposable))
+        {
+            var backingField = this.GetServiceBackingField(descriptor);
+            builder.AppendLine($"if ({backingField} != null)");
+            builder.AppendLine("{");
+            builder.PushIndent();
+            builder.AppendLine($"((System.IDisposable){backingField}).Dispose();");
+            builder.AppendLine($"{backingField} = null;");
+            builder.PopIndent();
+            builder.AppendLine("}");
+            builder.AppendLine();
+        }
+
+        builder.PopIndent();
+        builder.AppendLine("}");
         builder.AppendLine();
         foreach (var descriptor in descriptors)
         {

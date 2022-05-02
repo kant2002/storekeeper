@@ -4,6 +4,8 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+namespace StoreKeeper.CompilationTests;
+
 using Microsoft.Extensions.DependencyInjection;
 using static System.Console;
 
@@ -13,6 +15,8 @@ internal class Program
     {
         var serviceContainer = new ServiceCollection();
         serviceContainer.AddScoped<EnglishGreeting>();
+
+        serviceContainer.AddScoped<DisposableService>();
         serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
         var serviceProvider = serviceContainer.BuildServiceProviderAot();
         WriteLine($"Type of Service Provider: {serviceProvider.GetType().FullName}");

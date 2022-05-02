@@ -13,7 +13,7 @@ To run test suite
 - [x] Scoped registration using class
 - [x] Scoped registration using interface
 - [ ] Scoped registration using `Func<T>`
-- [ ] Implement disposing scope services
+- [x] Implement disposing scope services
 - [ ] Implement singleton services
 - [ ] Implement transient services
 - [ ] Support derived from ServiceCollection classes
