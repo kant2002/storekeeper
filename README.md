@@ -22,6 +22,7 @@ To run test suite
 - [ ] Support for `IEnumerable<T>` services
 - [ ] Dynamic registration of services.
 - [ ] Registrations across assemblies
+- [ ] Generic Host support
 
 # Usage example
 
