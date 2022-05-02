@@ -29,5 +29,4 @@ var serviceContainer = new ServiceCollection();
 serviceContainer.AddScoped<EnglishGreeting>();
 serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
 var serviceProvider = serviceContainer.BuildServiceProviderAot();
-
 ```
