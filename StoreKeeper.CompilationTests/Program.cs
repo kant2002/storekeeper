@@ -21,6 +21,7 @@ internal class Program
 
         serviceContainer.AddSingleton(new InstanceService());
         serviceContainer.AddScoped((_) => new InstanceServiceFromFunc());
+        serviceContainer.AddScoped<ProxyInstance>();
         using (var serviceProvider = serviceContainer.BuildServiceProviderAot())
         {
             WriteLine($"Type of Service Provider: {serviceProvider.GetType().FullName}");
@@ -42,9 +43,12 @@ internal class Program
             disposableService.DoWork();
 
             var message = serviceProvider.GetRequiredService<InstanceService>().GetMessage();
-            Console.WriteLine($"Message from instance service: {message}");
+            WriteLine($"Message from instance service: {message}");
             var factoryMessage = serviceProvider.GetRequiredService<InstanceServiceFromFunc>().GetMessage();
-            Console.WriteLine($"Message from factory service: {factoryMessage}");
+            WriteLine($"Message from factory service: {factoryMessage}");
+
+            var proxyMessage = serviceProvider.GetRequiredService<ProxyInstance>().GetMessage();
+            WriteLine($"Message from proxy service: {proxyMessage}");
         }
 
         WriteLine("OK");

@@ -18,7 +18,7 @@ To run test suite
 - [ ] Implement asyncronous disposing scope services.
 - [x] Implement singleton services.
 - [ ] Implement transient services.
-- [ ] Dependency resolution.
+- [x] Dependency resolution.
 - [ ] Support derived from ServiceCollection classes.
 - [ ] Support for `BuildServiceProvider`.
 - [ ] Support for `IEnumerable<T>` services.

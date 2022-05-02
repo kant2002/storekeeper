@@ -255,7 +255,20 @@ public static class StoreKeeperExtensions
 
     private string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
     {
-        return $"new {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}()";
+        var namedTypeSymbol = descriptor.ImplementationType as INamedTypeSymbol;
+        if (namedTypeSymbol is null)
+        {
+            throw new InvalidOperationException("Cannot resolve type");
+        }
+
+        var firstPublicConstructor = namedTypeSymbol.InstanceConstructors.First(_ => _.DeclaredAccessibility == Accessibility.Public);
+        IEnumerable<string> parameterStrings = firstPublicConstructor.Parameters.Select(_ =>
+        {
+            string parameterTypeName = _.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return $"({parameterTypeName})GetService(typeof({parameterTypeName}))";
+        });
+        var parametersListExpression = string.Join(", ", parameterStrings);
+        return $"new {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}({parametersListExpression})";
     }
 
     private string GetServiceBackingField(ServiceDescriptor descriptor)

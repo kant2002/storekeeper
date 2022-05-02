@@ -750,4 +750,131 @@ public static class StoreKeeperExtensions
 ";
         Assert.AreEqual(expectedOutput, output);
     }
+
+    [TestMethod]
+    public void ScopedRegistrationResolveDependency()
+    {
+        string source = @"
+using Microsoft.Extensions.DependencyInjection;
+
+class DependentTestService {}
+class TestService
+{
+    public TestService(DependentTestService dependency) {}
+}
+
+class Test
+{
+    void Method()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<DependentTestService>();
+        services.AddScoped<TestService>();
+    }
+}";
+        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+
+        Assert.IsNotNull(output);
+
+        var expectedOutput = @"using System;
+using Microsoft.Extensions.DependencyInjection;
+
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
+{
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services, null);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
+    {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        private IServiceProvider singletonScope;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services, IServiceProvider singletonScope)
+        {
+            this.services = services;
+            this.singletonScope = singletonScope;
+        }
+
+        public IServiceScope CreateScope()
+        {
+            var result = new ScopedServices(this.singletonScope);
+            return result;
+        }
+    }
+
+    private ServiceScopeFactory serviceScopeFactory;
+
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
+
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
+    {
+        private IServiceProvider singletonScope;
+
+        public ScopedServices(IServiceProvider singletonScope)
+        {
+            this.singletonScope = singletonScope;
+        }
+
+        public IServiceProvider ServiceProvider => this;
+
+        public void Dispose()
+        {
+        }
+
+        internal global::DependentTestService _DependentTestService;
+
+        internal global::TestService _TestService;
+
+        public object GetService(Type t)
+        {
+            if (t == typeof(global::DependentTestService))
+            {
+                _DependentTestService = _DependentTestService ?? new global::DependentTestService();
+                return _DependentTestService;
+            }
+
+            if (t == typeof(global::TestService))
+            {
+                _TestService = _TestService ?? new global::TestService((global::DependentTestService)GetService(typeof(global::DependentTestService)));
+                return _TestService;
+            }
+
+            return singletonScope?.GetService(t);
+        }
+    }
+
+    public object GetService(Type t)
+    {
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
+        {
+            return serviceScopeFactory;
+        }
+
+        return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+public static class StoreKeeperExtensions
+{
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    {
+        return new ServiceProviderAot(services);
+    }
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        return new ServiceProviderAot(services);
+    }
+}
+";
+        Assert.AreEqual(expectedOutput, output);
+    }
 }
