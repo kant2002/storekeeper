@@ -18,10 +18,10 @@ public class SimpleServiceRegistrationTests : CodeGenerationTestBase
         string source = @"
 using Microsoft.Extensions.DependencyInjection;
 
+class TestService {}
+
 class Test
 {
-    class TestService {}
-
     void Method()
     {
         var services = new ServiceCollection();
@@ -50,13 +50,13 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
         public void Dispose() {}
 
-        private TestService _TestService;
+        private global::TestService _TestService;
 
         public object GetService(Type t)
         {
-            if (t == typeof(TestService))
+            if (t == typeof(global::TestService))
             {
-                _TestService = _TestService ?? new TestService();
+                _TestService = _TestService ?? new global::TestService();
                 return _TestService;
             }
 
@@ -86,7 +86,6 @@ public static class StoreKeeperExtensions
         return new CustomServiceProvider();
     }
 }
-// Scoped TestService TestService
 ";
         Assert.AreEqual(expectedOutput, output);
     }
@@ -97,11 +96,11 @@ public static class StoreKeeperExtensions
         string source = @"
 using Microsoft.Extensions.DependencyInjection;
 
+interface ITestService {}
+class TestService: ITestService {}
+
 class Test
 {
-    interface ITestService {}
-    class TestService: ITestService {}
-
     void Method()
     {
         var services = new ServiceCollection();
@@ -130,13 +129,13 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
         public void Dispose() {}
 
-        private TestService _ITestService;
+        private global::TestService _ITestService;
 
         public object GetService(Type t)
         {
-            if (t == typeof(ITestService))
+            if (t == typeof(global::ITestService))
             {
-                _ITestService = _ITestService ?? new TestService();
+                _ITestService = _ITestService ?? new global::TestService();
                 return _ITestService;
             }
 
@@ -166,7 +165,6 @@ public static class StoreKeeperExtensions
         return new CustomServiceProvider();
     }
 }
-// Scoped ITestService TestService
 ";
         Assert.AreEqual(expectedOutput, output);
     }

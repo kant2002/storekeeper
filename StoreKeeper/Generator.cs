@@ -65,7 +65,7 @@ public partial class Generator : ISourceGenerator
     private ScopedServices implicitScope = new ScopedServices();
 ");
 
-        var descriptors = ConvertToDescriptors(receiver.Methods);
+        var descriptors = receiver.DetectedServices;
         sourceCode.PushIndent();
         this.GenerateScopedClass(sourceCode, descriptors);
         sourceCode.PopIndent();
@@ -92,34 +92,7 @@ public static class StoreKeeperExtensions
         return new CustomServiceProvider();
     }
 }");
-        foreach (var descriptor in descriptors)
-        {
-            sourceCode.AppendLine($"// {descriptor.Scope} {descriptor.InterfaceType} {descriptor.ImplementationType}");
-        }
-
         context.AddSource($"ioc_constructor.cs", SourceText.From(sourceCode.ToString(), Encoding.UTF8));
-    }
-
-    internal static IList<ServiceDescriptor> ConvertToDescriptors(List<MemberAccessExpressionSyntax> serviceRegistrationCandidates)
-    {
-        List<ServiceDescriptor> result = new();
-        foreach (var i in serviceRegistrationCandidates)
-        {
-            var name = i.Name;
-            if (name is GenericNameSyntax genericNameSyntax)
-            {
-                var identifier = genericNameSyntax.Identifier;
-                var typesList = genericNameSyntax.TypeArgumentList.Arguments;
-                var interfaceType = typesList[0];
-                var implementationType = typesList.ElementAtOrDefault(1) ?? interfaceType;
-                if (Enum.TryParse<ServiceScope>(genericNameSyntax.Identifier.ToString().Substring(3), out var scope))
-                {
-                    result.Add(new ServiceDescriptor(scope, interfaceType, implementationType));
-                }
-            }
-        }
-
-        return result;
     }
 
     internal void GenerateScopedClass(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
@@ -133,7 +106,7 @@ public static class StoreKeeperExtensions
         builder.AppendLine();
         foreach (var descriptor in descriptors)
         {
-            builder.AppendLine($"private {descriptor.ImplementationType} {this.GetServiceBackingField(descriptor)};");
+            builder.AppendLine($"private {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {this.GetServiceBackingField(descriptor)};");
             builder.AppendLine();
         }
 
@@ -142,7 +115,7 @@ public static class StoreKeeperExtensions
         builder.PushIndent();
         foreach (var descriptor in descriptors)
         {
-            builder.AppendLine($"if (t == typeof({descriptor.InterfaceType}))");
+            builder.AppendLine($"if (t == typeof({descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}))");
             builder.AppendLine("{");
             builder.PushIndent();
             var backingField = this.GetServiceBackingField(descriptor);
@@ -163,33 +136,17 @@ public static class StoreKeeperExtensions
 
     internal string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
     {
-        return $"new {descriptor.ImplementationType}()";
+        return $"new {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}()";
     }
 
     internal string GetServiceBackingField(ServiceDescriptor descriptor)
     {
-        return $"_{descriptor.InterfaceType}";
-    }
-
-    internal class ServiceDescriptor
-    {
-        public ServiceDescriptor(ServiceScope scope, TypeSyntax interfaceType, TypeSyntax implementationType)
-        {
-            this.Scope = scope;
-            this.InterfaceType = interfaceType;
-            this.ImplementationType = implementationType;
-        }
-
-        public ServiceScope Scope { get; }
-
-        public TypeSyntax InterfaceType { get; }
-
-        public TypeSyntax ImplementationType { get; }
+        return $"_{descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat).Replace('.', '_')}";
     }
 
     internal class SyntaxReceiver : ISyntaxContextReceiver
     {
-        public List<MemberAccessExpressionSyntax> Methods { get; } = new List<MemberAccessExpressionSyntax>();
+        public List<ServiceDescriptor> DetectedServices { get; } = new();
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
@@ -199,8 +156,27 @@ public static class StoreKeeperExtensions
                 var x = invocationExpressionSyntax.Name.ToString();
                 if (x.StartsWith("AddScoped") || x.StartsWith("AddSingleton") || x.StartsWith("AddTransient"))
                 {
-                    // Get the symbol being declared by the field, and keep it if its annotated
-                    this.Methods.Add(invocationExpressionSyntax);
+                    var name = invocationExpressionSyntax.Name;
+                    if (name is GenericNameSyntax genericNameSyntax)
+                    {
+                        var identifier = genericNameSyntax.Identifier;
+                        var typesList = genericNameSyntax.TypeArgumentList.Arguments;
+                        var interfaceType = typesList[0];
+                        var implementationType = typesList.ElementAtOrDefault(1) ?? interfaceType;
+                        if (Enum.TryParse<ServiceScope>(identifier.ToString().Substring(3), out var scope))
+                        {
+                            TypeInfo interfaceTypeInfo = context.SemanticModel.GetTypeInfo(interfaceType);
+                            TypeInfo implementationTypeInfo = context.SemanticModel.GetTypeInfo(implementationType);
+                            if (interfaceTypeInfo.Type is not null && implementationTypeInfo.Type is not null)
+                            {
+                                ServiceDescriptor descriptor = new ServiceDescriptor(
+                                    scope,
+                                    interfaceTypeInfo.Type,
+                                    implementationTypeInfo.Type);
+                                this.DetectedServices.Add(descriptor);
+                            }
+                        }
+                    }
                 }
             }
         }
