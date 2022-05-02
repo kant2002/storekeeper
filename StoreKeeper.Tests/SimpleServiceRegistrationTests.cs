@@ -37,24 +37,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
     private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            this.services = services;
+        }
+
         public IServiceScope CreateScope()
         {
-            return new ScopedServices();
+            var result = new ScopedServices();
+            return result;
         }
     }
 
-    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+    private ServiceScopeFactory serviceScopeFactory;
 
-    private ScopedServices implicitScope = new ScopedServices();
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
 
     public void Dispose()
     {
         implicitScope.Dispose();
     }
 
-    internal class ScopedServices : IServiceProvider, IServiceScope
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         public IServiceProvider ServiceProvider => this;
 
@@ -83,7 +97,7 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
             return serviceScopeFactory;
         }
 
-        return implicitScope.GetService(t);
+        return implicitScope.ServiceProvider.GetService(t);
     }
 }
 
@@ -91,11 +105,11 @@ public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
     }
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
     }
 }
 ";
@@ -128,24 +142,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
     private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            this.services = services;
+        }
+
         public IServiceScope CreateScope()
         {
-            return new ScopedServices();
+            var result = new ScopedServices();
+            return result;
         }
     }
 
-    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+    private ServiceScopeFactory serviceScopeFactory;
 
-    private ScopedServices implicitScope = new ScopedServices();
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
 
     public void Dispose()
     {
         implicitScope.Dispose();
     }
 
-    internal class ScopedServices : IServiceProvider, IServiceScope
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         public IServiceProvider ServiceProvider => this;
 
@@ -174,7 +202,7 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
             return serviceScopeFactory;
         }
 
-        return implicitScope.GetService(t);
+        return implicitScope.ServiceProvider.GetService(t);
     }
 }
 
@@ -182,11 +210,11 @@ public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
     }
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
     }
 }
 ";
@@ -218,24 +246,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
     private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            this.services = services;
+        }
+
         public IServiceScope CreateScope()
         {
-            return new ScopedServices();
+            var result = new ScopedServices();
+            return result;
         }
     }
 
-    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+    private ServiceScopeFactory serviceScopeFactory;
 
-    private ScopedServices implicitScope = new ScopedServices();
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
 
     public void Dispose()
     {
         implicitScope.Dispose();
     }
 
-    internal class ScopedServices : IServiceProvider, IServiceScope
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         public IServiceProvider ServiceProvider => this;
 
@@ -270,7 +312,7 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
             return serviceScopeFactory;
         }
 
-        return implicitScope.GetService(t);
+        return implicitScope.ServiceProvider.GetService(t);
     }
 }
 
@@ -278,11 +320,122 @@ public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
     }
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new ServiceProviderAot();
+        return new ServiceProviderAot(services);
+    }
+}
+";
+        Assert.AreEqual(expectedOutput, output);
+    }
+
+    [TestMethod]
+    public void ScopedRegistrationUsingInstance()
+    {
+        string source = @"
+using Microsoft.Extensions.DependencyInjection;
+
+class TestService {}
+
+class Test
+{
+    void Method()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped(new TestService());
+    }
+}";
+        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+
+        Assert.IsNotNull(output);
+
+        var expectedOutput = @"using System;
+using Microsoft.Extensions.DependencyInjection;
+
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
+{
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
+    {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public IServiceScope CreateScope()
+        {
+            var result = new ScopedServices();
+            foreach (var serviceDescriptor in this.services)
+            {
+                if (serviceDescriptor.ServiceType == typeof(global::TestService))
+                {
+                    result._TestService = (global::TestService)serviceDescriptor.ImplementationInstance;
+                }
+            }
+
+            return result;
+        }
+    }
+
+    private ServiceScopeFactory serviceScopeFactory;
+
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
+
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
+    {
+        public IServiceProvider ServiceProvider => this;
+
+        public void Dispose()
+        {
+        }
+
+        private global::TestService _TestService;
+
+        public object GetService(Type t)
+        {
+            if (t == typeof(global::TestService))
+            {
+                return _TestService;
+            }
+
+            return null;
+        }
+    }
+
+    public object GetService(Type t)
+    {
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
+        {
+            return serviceScopeFactory;
+        }
+
+        return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+public static class StoreKeeperExtensions
+{
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    {
+        return new ServiceProviderAot(services);
+    }
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        return new ServiceProviderAot(services);
     }
 }
 ";

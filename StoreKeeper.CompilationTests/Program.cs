@@ -18,6 +18,7 @@ internal class Program
 
         serviceContainer.AddScoped<DisposableService>();
         serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
+        serviceContainer.AddScoped<InstanceService>();
         using (var serviceProvider = serviceContainer.BuildServiceProviderAot())
         {
             WriteLine($"Type of Service Provider: {serviceProvider.GetType().FullName}");
@@ -37,6 +38,9 @@ internal class Program
 
             var disposableService = serviceProvider.GetRequiredService<DisposableService>();
             disposableService.DoWork();
+
+            var message = serviceProvider.GetRequiredService<InstanceService>().GetMessage();
+            Console.WriteLine($"Message from instance service: {message}");
         }
 
         WriteLine("OK");

@@ -22,5 +22,9 @@ internal class ServiceDescriptor
 
     public ITypeSymbol ImplementationType { get; }
 
+    public bool UseInstance { get; set; }
+
+    public bool UseFactory { get; set; }
+
     public bool IsDisposable => this.ImplementationType.AllInterfaces.Any(_ => _.ToDisplayString() == "System.IDisposable");
 }
