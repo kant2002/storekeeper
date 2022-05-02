@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------
 
 using Microsoft.Extensions.Hosting;
+using StoreKeeper.GenericHost;
 
 var host = new HostBuilder()
     .ConfigureServices((hostContext, services) =>

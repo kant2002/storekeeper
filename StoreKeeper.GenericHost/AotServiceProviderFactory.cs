@@ -4,12 +4,14 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+namespace StoreKeeper.GenericHost;
+
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// AOT specific service provider factory.
 /// </summary>
-public class AotServiceProviderFactory : IServiceProviderFactory<object>
+public sealed class AotServiceProviderFactory : IServiceProviderFactory<object>
 {
     private IServiceCollection? services;
     private object? serviceContainer;
