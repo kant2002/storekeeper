@@ -10,20 +10,21 @@ To run test suite
 
 # Implementation plan
 
-- [x] Scoped registration using class
-- [x] Scoped registration using interface
-- [ ] Scoped registration using `Func<T>`
-- [x] Implement disposing scope services
-- [ ] Implement asyncronous disposing scope services
-- [ ] Implement singleton services
-- [ ] Implement transient services
-- [ ] Dependency resolution
-- [ ] Support derived from ServiceCollection classes
-- [ ] Support for `BuildServiceProvider`
-- [ ] Support for `IEnumerable<T>` services
+- [x] Scoped registration using class.
+- [x] Scoped registration using interface.
+- [ ] Scoped registration using `Func<T>`.
+- [x] Implement disposing scope services.
+- [ ] Implement asyncronous disposing scope services.
+- [ ] Implement singleton services.
+- [ ] Implement transient services.
+- [ ] Dependency resolution.
+- [ ] Support derived from ServiceCollection classes.
+- [ ] Support for `BuildServiceProvider`.
+- [ ] Support for `IEnumerable<T>` services.
 - [ ] Dynamic registration of services.
-- [ ] Registrations across assemblies
-- [ ] Generic Host support
+- [ ] Registrations across assemblies.
+- [ ] Generic Host support.
+- [ ] Services with `internal` visibility.
 
 # Usage example
 
