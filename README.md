@@ -3,6 +3,14 @@ Store Keeper
 
 Nice store keeper, keeps all you classes in the store. All dependencies would be stored there. Also AOT friendly.
 
+# How to use
+
+Add `SqlMarshal` Nuget package using
+
+```
+dotnet add package StoreKeeper
+```
+
 To try it out, look at the `StoreKeeper.CompilationTests` project.
 To run test suite
 
