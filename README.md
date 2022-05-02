@@ -19,6 +19,7 @@ To run test suite
 - [ ] Support derived from ServiceCollection classes
 - [ ] Support for `BuildServiceProvider`
 - [ ] Support for `IEnumerable<T>` services
+- [ ] Dynamic registration of services.
 
 # Usage example
 
