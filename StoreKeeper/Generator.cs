@@ -55,21 +55,40 @@ public partial class Generator : ISourceGenerator
         builder.AppendLine("using System;");
         builder.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         builder.AppendLine();
+
+        var descriptors = receiver.DetectedServices;
+        var scopedServices = descriptors.Where(_ => _.Scope == ServiceScope.Scoped).ToList();
+        var singletonServices = descriptors.Where(_ => _.Scope == ServiceScope.Singleton).ToList();
+
         builder.AppendLine(@"public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable");
         builder.OpenBraces();
         builder.AppendLine("internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         builder.OpenBraces();
-        builder.AppendLine(@"this.serviceScopeFactory = new ServiceScopeFactory(services);");
+        if (singletonServices.Count == 0)
+        {
+            builder.AppendLine(@"this.serviceScopeFactory = new ServiceScopeFactory(services, null);");
+        }
+        else
+        {
+            builder.AppendLine(@"this.singletonScope = new SingletonServices(null);");
+            this.PopulateScopeWithInstances(builder, singletonServices, "this.singletonScope", "services");
+            builder.AppendLine(@"this.serviceScopeFactory = new ServiceScopeFactory(services, this.singletonScope);");
+        }
+
         builder.AppendLine(@"this.implicitScope = serviceScopeFactory.CreateScope();");
         builder.CloseBraces();
         builder.AppendLine();
 
-        var descriptors = receiver.DetectedServices;
-        this.GenerateServiceScopeFactoryClass(builder, descriptors);
+        this.GenerateServiceScopeFactoryClass(builder, scopedServices);
         builder.AppendLine("private ServiceScopeFactory serviceScopeFactory;");
         builder.AppendLine();
         builder.AppendLine(@"private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;");
         builder.AppendLine();
+        if (singletonServices.Count > 0)
+        {
+            builder.AppendLine(@"private SingletonServices singletonScope;");
+            builder.AppendLine();
+        }
 
         builder.AppendLine(@"public void Dispose()");
         builder.OpenBraces();
@@ -77,8 +96,14 @@ public partial class Generator : ISourceGenerator
         builder.CloseBraces();
         builder.AppendLine();
 
-        this.GenerateScopedClass(builder, descriptors);
+        this.GenerateScopedClass("ScopedServices", builder, scopedServices);
         builder.AppendLine();
+        if (singletonServices.Count > 0)
+        {
+            this.GenerateScopedClass("SingletonServices", builder, singletonServices);
+            builder.AppendLine();
+        }
+
         builder.AppendLine(@"public object GetService(Type t)
     {
         if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
@@ -110,17 +135,29 @@ public static class StoreKeeperExtensions
         builder.OpenBraces();
         builder.AppendLine("private Microsoft.Extensions.DependencyInjection.IServiceCollection services;");
         builder.AppendLine();
-        builder.AppendLine("public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
+        builder.AppendLine("private IServiceProvider singletonScope;");
+        builder.AppendLine();
+        builder.AppendLine("public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services, IServiceProvider singletonScope)");
         builder.OpenBraces();
         builder.AppendLine("this.services = services;");
+        builder.AppendLine("this.singletonScope = singletonScope;");
         builder.CloseBraces();
         builder.AppendLine();
         builder.AppendLine("public IServiceScope CreateScope()");
         builder.OpenBraces();
-        builder.AppendLine("var result = new ScopedServices();");
+        builder.AppendLine("var result = new ScopedServices(this.singletonScope);");
+        this.PopulateScopeWithInstances(builder, descriptors, "result", "this.services");
+        builder.AppendLine("return result;");
+        builder.CloseBraces();
+        builder.CloseBraces();
+        builder.AppendLine();
+    }
+
+    private void PopulateScopeWithInstances(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors, string scopeTarget, string servicesVariable)
+    {
         if (descriptors.Any(_ => _.UseInstance || _.UseFactory))
         {
-            builder.AppendLine("foreach (var serviceDescriptor in this.services)");
+            builder.AppendLine($"foreach (var serviceDescriptor in {servicesVariable})");
             builder.OpenBraces();
             foreach (var descriptor in descriptors)
             {
@@ -135,12 +172,12 @@ public static class StoreKeeperExtensions
                 builder.OpenBraces();
                 if (descriptor.UseInstance)
                 {
-                    builder.AppendLine($"result.{backingField} = ({type})serviceDescriptor.ImplementationInstance;");
+                    builder.AppendLine($"{scopeTarget}.{backingField} = ({type})serviceDescriptor.ImplementationInstance;");
                 }
 
                 if (descriptor.UseFactory)
                 {
-                    builder.AppendLine($"result.{backingField}Factory = (Func<IServiceProvider, Object>)serviceDescriptor.ImplementationFactory;");
+                    builder.AppendLine($"{scopeTarget}.{backingField}Factory = (Func<IServiceProvider, Object>)serviceDescriptor.ImplementationFactory;");
                 }
 
                 builder.CloseBraces();
@@ -149,38 +186,35 @@ public static class StoreKeeperExtensions
             builder.CloseBraces();
             builder.AppendLine();
         }
-
-        builder.AppendLine("return result;");
-        builder.CloseBraces();
-        builder.CloseBraces();
-        builder.AppendLine();
     }
 
-    private void GenerateScopedClass(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
+    private void GenerateScopedClass(string className, IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
     {
-        builder.AppendLine("internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope");
-        builder.AppendLine("{");
-        builder.PushIndent();
+        builder.AppendLine($"internal class {className} : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope");
+        builder.OpenBraces();
+        builder.AppendLine("private IServiceProvider singletonScope;");
+        builder.AppendLine();
+        builder.AppendLine($"public {className}(IServiceProvider singletonScope)");
+        builder.OpenBraces();
+        builder.AppendLine("this.singletonScope = singletonScope;");
+        builder.CloseBraces();
+        builder.AppendLine();
         builder.AppendLine("public IServiceProvider ServiceProvider => this;");
         builder.AppendLine();
         builder.AppendLine("public void Dispose()");
-        builder.AppendLine("{");
-        builder.PushIndent();
+        builder.OpenBraces();
         foreach (var descriptor in descriptors.Where(_ => _.IsDisposable))
         {
             var backingField = this.GetServiceBackingField(descriptor);
             builder.AppendLine($"if ({backingField} != null)");
-            builder.AppendLine("{");
-            builder.PushIndent();
+            builder.OpenBraces();
             builder.AppendLine($"((System.IDisposable){backingField}).Dispose();");
             builder.AppendLine($"{backingField} = null;");
-            builder.PopIndent();
-            builder.AppendLine("}");
+            builder.CloseBraces();
             builder.AppendLine();
         }
 
-        builder.PopIndent();
-        builder.AppendLine("}");
+        builder.CloseBraces();
         builder.AppendLine();
         foreach (var descriptor in descriptors)
         {
@@ -194,13 +228,11 @@ public static class StoreKeeperExtensions
         }
 
         builder.AppendLine("public object GetService(Type t)");
-        builder.AppendLine("{");
-        builder.PushIndent();
+        builder.OpenBraces();
         foreach (var descriptor in descriptors)
         {
             builder.AppendLine($"if (t == typeof({descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}))");
-            builder.AppendLine("{");
-            builder.PushIndent();
+            builder.OpenBraces();
             var backingField = this.GetServiceBackingField(descriptor);
             if (descriptor.UseFactory)
             {
@@ -212,17 +244,13 @@ public static class StoreKeeperExtensions
             }
 
             builder.AppendLine($"return {backingField};");
-            builder.PopIndent();
-            builder.AppendLine("}");
+            builder.CloseBraces();
             builder.AppendLine();
         }
 
-        builder.AppendLine(@"return null;");
-        builder.PopIndent();
-
-        builder.AppendLine("}");
-        builder.PopIndent();
-        builder.AppendLine("}");
+        builder.AppendLine(@"return singletonScope?.GetService(t);");
+        builder.CloseBraces();
+        builder.CloseBraces();
     }
 
     private string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)

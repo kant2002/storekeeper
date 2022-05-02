@@ -16,7 +16,7 @@ To run test suite
 - [x] Scoped registration using instance object.
 - [x] Implement disposing scope services.
 - [ ] Implement asyncronous disposing scope services.
-- [ ] Implement singleton services.
+- [x] Implement singleton services.
 - [ ] Implement transient services.
 - [ ] Dependency resolution.
 - [ ] Support derived from ServiceCollection classes.

@@ -19,7 +19,7 @@ internal class Program
         serviceContainer.AddScoped<DisposableService>();
         serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
 
-        // serviceContainer.AddSingleton(new InstanceService());
+        serviceContainer.AddSingleton(new InstanceService());
         serviceContainer.AddScoped((_) => new InstanceServiceFromFunc());
         using (var serviceProvider = serviceContainer.BuildServiceProviderAot())
         {
@@ -41,8 +41,8 @@ internal class Program
             var disposableService = serviceProvider.GetRequiredService<DisposableService>();
             disposableService.DoWork();
 
-            // var message = serviceProvider.GetRequiredService<InstanceService>().GetMessage();
-            // Console.WriteLine($"Message from instance service: {message}");
+            var message = serviceProvider.GetRequiredService<InstanceService>().GetMessage();
+            Console.WriteLine($"Message from instance service: {message}");
             var factoryMessage = serviceProvider.GetRequiredService<InstanceServiceFromFunc>().GetMessage();
             Console.WriteLine($"Message from factory service: {factoryMessage}");
         }
