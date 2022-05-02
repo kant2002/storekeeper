@@ -124,7 +124,7 @@ public static class StoreKeeperExtensions
             builder.OpenBraces();
             foreach (var descriptor in descriptors)
             {
-                if (!descriptor.UseInstance)
+                if (!descriptor.UseInstance && !descriptor.UseFactory)
                 {
                     continue;
                 }
@@ -133,7 +133,16 @@ public static class StoreKeeperExtensions
                 var backingField = this.GetServiceBackingField(descriptor);
                 builder.AppendLine($"if (serviceDescriptor.ServiceType == typeof({type}))");
                 builder.OpenBraces();
-                builder.AppendLine($"result.{backingField} = ({type})serviceDescriptor.ImplementationInstance;");
+                if (descriptor.UseInstance)
+                {
+                    builder.AppendLine($"result.{backingField} = ({type})serviceDescriptor.ImplementationInstance;");
+                }
+
+                if (descriptor.UseFactory)
+                {
+                    builder.AppendLine($"result.{backingField}Factory = (Func<IServiceProvider, Object>)serviceDescriptor.ImplementationFactory;");
+                }
+
                 builder.CloseBraces();
             }
 
@@ -175,8 +184,13 @@ public static class StoreKeeperExtensions
         builder.AppendLine();
         foreach (var descriptor in descriptors)
         {
-            builder.AppendLine($"private {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {this.GetServiceBackingField(descriptor)};");
+            builder.AppendLine($"internal {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {this.GetServiceBackingField(descriptor)};");
             builder.AppendLine();
+            if (descriptor.UseFactory)
+            {
+                builder.AppendLine($"internal Func<IServiceProvider, Object> {this.GetServiceBackingField(descriptor)}Factory;");
+                builder.AppendLine();
+            }
         }
 
         builder.AppendLine("public object GetService(Type t)");
@@ -188,7 +202,11 @@ public static class StoreKeeperExtensions
             builder.AppendLine("{");
             builder.PushIndent();
             var backingField = this.GetServiceBackingField(descriptor);
-            if (!descriptor.UseInstance)
+            if (descriptor.UseFactory)
+            {
+                builder.AppendLine($"{backingField} = {backingField} ?? ({descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}){backingField}Factory(this);");
+            }
+            else if (!descriptor.UseInstance)
             {
                 builder.AppendLine($"{backingField} = {backingField} ?? {this.GetInstantiationExpression(descriptor, descriptors)};");
             }
@@ -242,22 +260,34 @@ public static class StoreKeeperExtensions
                     else if (name is IdentifierNameSyntax identifierNameSyntax)
                     {
                         var argument = invocationExpressionSyntax.ArgumentList.Arguments[0];
-                        TypeInfo interfaceTypeInfo = context.SemanticModel.GetTypeInfo(argument.Expression);
+                        TypeInfo interfaceTypeInfo = GetExpressionType(context, argument);
                         if (interfaceTypeInfo.Type is not null)
                         {
+                            var useInstance = argument.Expression is ObjectCreationExpressionSyntax;
                             var scope = (ServiceScope)Enum.Parse(typeof(ServiceScope), x.Substring(3));
-                            ServiceDescriptor descriptor = new ServiceDescriptor(
+                            var descriptor = new ServiceDescriptor(
                                 scope,
                                 interfaceTypeInfo.Type,
                                 interfaceTypeInfo.Type)
                             {
-                                UseInstance = true,
+                                UseInstance = useInstance,
+                                UseFactory = !useInstance,
                             };
                             this.DetectedServices.Add(descriptor);
                         }
                     }
                 }
             }
+        }
+
+        private static TypeInfo GetExpressionType(GeneratorSyntaxContext context, ArgumentSyntax argument)
+        {
+            var expression = argument.Expression switch
+            {
+                ParenthesizedLambdaExpressionSyntax pes => pes.ExpressionBody ?? throw new NotSupportedException("Complex lambda expression does not supported"),
+                _ => argument.Expression,
+            };
+            return context.SemanticModel.GetTypeInfo(expression);
         }
 
         private void ProcessGenericSyntax(GeneratorSyntaxContext context, GenericNameSyntax genericNameSyntax)
