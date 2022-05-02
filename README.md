@@ -24,7 +24,7 @@ To run test suite
 
 Almost identical with ServiceCollection usage except `BuildServiceProviderAot` method produce statically constructed service provider.
 
-```
+```csharp
 var serviceContainer = new ServiceCollection();
 serviceContainer.AddScoped<EnglishGreeting>();
 serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
