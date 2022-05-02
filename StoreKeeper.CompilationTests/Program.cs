@@ -18,20 +18,25 @@ internal class Program
 
         serviceContainer.AddScoped<DisposableService>();
         serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
-        var serviceProvider = serviceContainer.BuildServiceProviderAot();
-        WriteLine($"Type of Service Provider: {serviceProvider.GetType().FullName}");
-        var englishGreeting = serviceProvider.GetRequiredService<EnglishGreeting>();
-        var andriiMessage = englishGreeting.SayHello("Andrii");
-        if (andriiMessage != "Hello Andrii!")
+        using (var serviceProvider = serviceContainer.BuildServiceProviderAot())
         {
-            WriteLine("Failed to get EnglishGreeting");
-        }
+            WriteLine($"Type of Service Provider: {serviceProvider.GetType().FullName}");
+            var englishGreeting = serviceProvider.GetRequiredService<EnglishGreeting>();
+            var andriiMessage = englishGreeting.SayHello("Andrii");
+            if (andriiMessage != "Hello Andrii!")
+            {
+                WriteLine("Failed to get EnglishGreeting");
+            }
 
-        var iGreeting = serviceProvider.GetRequiredService<IGreeting>();
-        var maratMessage = iGreeting.SayHello("Marat");
-        if (maratMessage != "Hello Marat!")
-        {
-            WriteLine("Failed to get IGreeting");
+            var iGreeting = serviceProvider.GetRequiredService<IGreeting>();
+            var maratMessage = iGreeting.SayHello("Marat");
+            if (maratMessage != "Hello Marat!")
+            {
+                WriteLine("Failed to get IGreeting");
+            }
+
+            var disposableService = serviceProvider.GetRequiredService<DisposableService>();
+            disposableService.DoWork();
         }
 
         WriteLine("OK");

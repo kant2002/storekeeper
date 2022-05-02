@@ -12,4 +12,9 @@ internal class DisposableService : IDisposable
     {
         Console.WriteLine("Dispose DisposableService");
     }
+
+    public void DoWork()
+    {
+        Console.WriteLine("Disposable service created");
+    }
 }

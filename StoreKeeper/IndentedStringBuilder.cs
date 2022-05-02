@@ -56,6 +56,18 @@ internal sealed class IndentedStringBuilder
         this.depthLevel--;
     }
 
+    public void OpenBraces()
+    {
+        this.AppendLine("{");
+        this.PushIndent();
+    }
+
+    public void CloseBraces()
+    {
+        this.PopIndent();
+        this.AppendLine("}");
+    }
+
     /// <inheritdoc/>
     public override string ToString() => this.builder.ToString();
 

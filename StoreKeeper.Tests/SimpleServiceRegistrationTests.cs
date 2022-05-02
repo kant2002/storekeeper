@@ -35,14 +35,24 @@ class Test
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
-    public IServiceScope CreateScope()
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
-        return new ScopedServices();
+        public IServiceScope CreateScope()
+        {
+            return new ScopedServices();
+        }
     }
 
+    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+
     private ScopedServices implicitScope = new ScopedServices();
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
 
     internal class ScopedServices : IServiceProvider, IServiceScope
     {
@@ -68,9 +78,9 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
     public object GetService(Type t)
     {
-        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScope))
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
         {
-            return this;
+            return serviceScopeFactory;
         }
 
         return implicitScope.GetService(t);
@@ -79,13 +89,13 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
 public static class StoreKeeperExtensions
 {
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
 }
 ";
@@ -116,14 +126,24 @@ class Test
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
-    public IServiceScope CreateScope()
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
-        return new ScopedServices();
+        public IServiceScope CreateScope()
+        {
+            return new ScopedServices();
+        }
     }
 
+    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+
     private ScopedServices implicitScope = new ScopedServices();
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
 
     internal class ScopedServices : IServiceProvider, IServiceScope
     {
@@ -149,9 +169,9 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
     public object GetService(Type t)
     {
-        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScope))
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
         {
-            return this;
+            return serviceScopeFactory;
         }
 
         return implicitScope.GetService(t);
@@ -160,13 +180,13 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
 public static class StoreKeeperExtensions
 {
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
 }
 ";
@@ -196,14 +216,24 @@ class Test
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
-    public IServiceScope CreateScope()
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
     {
-        return new ScopedServices();
+        public IServiceScope CreateScope()
+        {
+            return new ScopedServices();
+        }
     }
 
+    private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();
+
     private ScopedServices implicitScope = new ScopedServices();
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
 
     internal class ScopedServices : IServiceProvider, IServiceScope
     {
@@ -235,9 +265,9 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
     public object GetService(Type t)
     {
-        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScope))
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
         {
-            return this;
+            return serviceScopeFactory;
         }
 
         return implicitScope.GetService(t);
@@ -246,13 +276,13 @@ internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
 
 public static class StoreKeeperExtensions
 {
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
 }
 ";

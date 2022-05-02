@@ -55,26 +55,26 @@ public partial class Generator : ISourceGenerator
         sourceCode.AppendLine("using System;");
         sourceCode.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sourceCode.AppendLine();
-        sourceCode.AppendLine(@"internal class CustomServiceProvider : IServiceProvider, IServiceScopeFactory
-{
-    public IServiceScope CreateScope()
-    {
-        return new ScopedServices();
-    }
+        sourceCode.AppendLine(@"public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable");
+        sourceCode.OpenBraces();
+        this.GenerateServiceScopeFactoryClass(sourceCode);
+        sourceCode.AppendLine(@"private ScopedServices implicitScope = new ScopedServices();");
+        sourceCode.AppendLine();
 
-    private ScopedServices implicitScope = new ScopedServices();
-");
+        sourceCode.AppendLine(@"public void Dispose()");
+        sourceCode.OpenBraces();
+        sourceCode.AppendLine(@"implicitScope.Dispose();");
+        sourceCode.CloseBraces();
+        sourceCode.AppendLine();
 
         var descriptors = receiver.DetectedServices;
-        sourceCode.PushIndent();
         this.GenerateScopedClass(sourceCode, descriptors);
-        sourceCode.PopIndent();
         sourceCode.AppendLine();
-        sourceCode.AppendLine(@"    public object GetService(Type t)
+        sourceCode.AppendLine(@"public object GetService(Type t)
     {
-        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScope))
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
         {
-            return this;
+            return serviceScopeFactory;
         }
 
         return implicitScope.GetService(t);
@@ -83,19 +83,33 @@ public partial class Generator : ISourceGenerator
 
 public static class StoreKeeperExtensions
 {
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
-    public static IServiceProvider BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        return new CustomServiceProvider();
+        return new ServiceProviderAot();
     }
 }");
         context.AddSource($"ioc_constructor.cs", SourceText.From(sourceCode.ToString(), Encoding.UTF8));
     }
 
-    internal void GenerateScopedClass(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
+    private void GenerateServiceScopeFactoryClass(IndentedStringBuilder builder)
+    {
+        builder.AppendLine("private sealed class ServiceScopeFactory : IServiceScopeFactory");
+        builder.OpenBraces();
+        builder.AppendLine("public IServiceScope CreateScope()");
+        builder.OpenBraces();
+        builder.AppendLine("return new ScopedServices();");
+        builder.CloseBraces();
+        builder.CloseBraces();
+        builder.AppendLine();
+        builder.AppendLine("private ServiceScopeFactory serviceScopeFactory = new ServiceScopeFactory();");
+        builder.AppendLine();
+    }
+
+    private void GenerateScopedClass(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
     {
         builder.AppendLine("internal class ScopedServices : IServiceProvider, IServiceScope");
         builder.AppendLine("{");
@@ -151,12 +165,12 @@ public static class StoreKeeperExtensions
         builder.AppendLine("}");
     }
 
-    internal string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
+    private string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
     {
         return $"new {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}()";
     }
 
-    internal string GetServiceBackingField(ServiceDescriptor descriptor)
+    private string GetServiceBackingField(ServiceDescriptor descriptor)
     {
         return $"_{descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat).Replace('.', '_')}";
     }

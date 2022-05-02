@@ -14,6 +14,7 @@ To run test suite
 - [x] Scoped registration using interface
 - [ ] Scoped registration using `Func<T>`
 - [x] Implement disposing scope services
+- [ ] Implement asyncronous disposing scope services
 - [ ] Implement singleton services
 - [ ] Implement transient services
 - [ ] Support derived from ServiceCollection classes
