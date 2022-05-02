@@ -12,7 +12,7 @@ To run test suite
 
 - [x] Scoped registration using class.
 - [x] Scoped registration using interface.
-- [ ] Scoped registration using `Func<T>`.
+- [x] Scoped registration using `Func<T>`.
 - [x] Scoped registration using instance object.
 - [x] Implement disposing scope services.
 - [ ] Implement asyncronous disposing scope services.
