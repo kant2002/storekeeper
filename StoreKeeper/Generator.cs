@@ -123,20 +123,7 @@ public partial class Generator : ISourceGenerator
             .ToArray();
         if (staticDetectionServices.Length > 0)
         {
-            builder.AppendLine(@"internal static class ServicesReplacementExtensions");
-            builder.OpenBraces();
-            for (var i = 0; i < staticDetectionServices.Length; i++)
-            {
-                var descriptor = staticDetectionServices[i];
-                this.GenerateStaticFactoryMethod(builder, descriptor);
-                if (i != staticDetectionServices.Length - 1)
-                {
-                    builder.AppendLine();
-                }
-            }
-
-            builder.CloseBraces();
-            builder.AppendLine();
+            this.GenerateServiceReplacement(builder, staticDetectionServices);
         }
 
         builder.AppendLine(@"public static class StoreKeeperExtensions
@@ -153,7 +140,50 @@ public partial class Generator : ISourceGenerator
         context.AddSource($"ioc_constructor.cs", SourceText.From(builder.ToString(), Encoding.UTF8));
     }
 
-    private void GenerateStaticFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    private void GenerateServiceReplacement(IndentedStringBuilder builder, ServiceDescriptor[] staticDetectionServices)
+    {
+        builder.AppendLine(@"internal static class ServicesReplacementExtensions");
+        builder.OpenBraces();
+        for (var i = 0; i < staticDetectionServices.Length; i++)
+        {
+            var descriptor = staticDetectionServices[i];
+            this.GenerateStaticFactoryMethod(builder, descriptor);
+            builder.AppendLine();
+        }
+
+        builder.AppendLine(@"public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
+        builder.OpenBraces();
+
+        builder.AppendLine("if (services.IsReadOnly)");
+        builder.OpenBraces();
+        builder.AppendLine(@"throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");");
+        builder.CloseBraces();
+        builder.AppendLine();
+
+        builder.AppendLine("for (var i = 0; i < services.Count; i++)");
+        builder.OpenBraces();
+        builder.AppendLine(@"var descriptor = services[i];");
+        for (var i = 0; i < staticDetectionServices.Length; i++)
+        {
+            var descriptor = staticDetectionServices[i];
+            var name = this.GetStaticReplacementFactoryMethod(builder, descriptor);
+            builder.AppendLine($@"if (descriptor.ServiceType == typeof({descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}) && descriptor.ImplementationType == typeof({descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}))");
+            builder.OpenBraces();
+            builder.AppendLine($@"services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.{name}, descriptor.Lifetime);");
+            builder.CloseBraces();
+        }
+
+        builder.CloseBraces();
+        builder.AppendLine();
+
+        builder.AppendLine("return services;");
+        builder.CloseBraces(); // UseAotServices
+
+        builder.CloseBraces();
+        builder.AppendLine();
+    }
+
+    private string GetStaticReplacementFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
     {
         string name;
         var interfaceType = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
@@ -170,6 +200,13 @@ public partial class Generator : ISourceGenerator
                 .Replace(".", "_");
             name = $"Build_{interfaceType}_{implementationType}";
         }
+
+        return name;
+    }
+
+    private void GenerateStaticFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        var name = this.GetStaticReplacementFactoryMethod(builder, descriptor);
 
         builder.AppendLine($"public static object {name}(IServiceProvider serviceProvider)");
         builder.OpenBraces();

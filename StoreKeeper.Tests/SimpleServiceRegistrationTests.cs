@@ -117,6 +117,25 @@ internal static class ServicesReplacementExtensions
     {
         return new global::TestService();
     }
+
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        if (services.IsReadOnly)
+        {
+            throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");
+        }
+
+        for (var i = 0; i < services.Count; i++)
+        {
+            var descriptor = services[i];
+            if (descriptor.ServiceType == typeof(global::TestService) && descriptor.ImplementationType == typeof(global::TestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_TestService, descriptor.Lifetime);
+            }
+        }
+
+        return services;
+    }
 }
 
 public static class StoreKeeperExtensions
@@ -239,6 +258,25 @@ internal static class ServicesReplacementExtensions
     public static object Build_global_ITestService_global_TestService(IServiceProvider serviceProvider)
     {
         return new global::TestService();
+    }
+
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        if (services.IsReadOnly)
+        {
+            throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");
+        }
+
+        for (var i = 0; i < services.Count; i++)
+        {
+            var descriptor = services[i];
+            if (descriptor.ServiceType == typeof(global::ITestService) && descriptor.ImplementationType == typeof(global::TestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_ITestService_global_TestService, descriptor.Lifetime);
+            }
+        }
+
+        return services;
     }
 }
 
@@ -367,6 +405,25 @@ internal static class ServicesReplacementExtensions
     public static object Build_global_TestService(IServiceProvider serviceProvider)
     {
         return new global::TestService();
+    }
+
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        if (services.IsReadOnly)
+        {
+            throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");
+        }
+
+        for (var i = 0; i < services.Count; i++)
+        {
+            var descriptor = services[i];
+            if (descriptor.ServiceType == typeof(global::TestService) && descriptor.ImplementationType == typeof(global::TestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_TestService, descriptor.Lifetime);
+            }
+        }
+
+        return services;
     }
 }
 
@@ -898,6 +955,29 @@ internal static class ServicesReplacementExtensions
     {
         var param_0 = (global::DependentTestService)serviceProvider.GetService(typeof(global::DependentTestService));
         return new global::TestService(param_0);
+    }
+
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        if (services.IsReadOnly)
+        {
+            throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");
+        }
+
+        for (var i = 0; i < services.Count; i++)
+        {
+            var descriptor = services[i];
+            if (descriptor.ServiceType == typeof(global::DependentTestService) && descriptor.ImplementationType == typeof(global::DependentTestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_DependentTestService, descriptor.Lifetime);
+            }
+            if (descriptor.ServiceType == typeof(global::TestService) && descriptor.ImplementationType == typeof(global::TestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_TestService, descriptor.Lifetime);
+            }
+        }
+
+        return services;
     }
 }
 
