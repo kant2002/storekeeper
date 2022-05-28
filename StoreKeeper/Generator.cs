@@ -113,9 +113,33 @@ public partial class Generator : ISourceGenerator
 
         return implicitScope.ServiceProvider.GetService(t);
     }
-}
+}");
+        builder.PopIndent();
+        builder.AppendLine();
 
-public static class StoreKeeperExtensions
+        var staticDetectionServices = descriptors
+            .Where(_ => !_.UseFactory && !_.UseInstance)
+            .Distinct(new ServiceDescriptorComparer())
+            .ToArray();
+        if (staticDetectionServices.Length > 0)
+        {
+            builder.AppendLine(@"internal static class ServicesReplacementExtensions");
+            builder.OpenBraces();
+            for (var i = 0; i < staticDetectionServices.Length; i++)
+            {
+                var descriptor = staticDetectionServices[i];
+                this.GenerateStaticFactoryMethod(builder, descriptor);
+                if (i != staticDetectionServices.Length - 1)
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            builder.CloseBraces();
+            builder.AppendLine();
+        }
+
+        builder.AppendLine(@"public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
     {
@@ -127,6 +151,44 @@ public static class StoreKeeperExtensions
     }
 }");
         context.AddSource($"ioc_constructor.cs", SourceText.From(builder.ToString(), Encoding.UTF8));
+    }
+
+    private void GenerateStaticFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        string name;
+        var interfaceType = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            .Replace("::", "_")
+            .Replace(".", "_");
+        if (descriptor.InterfaceType == descriptor.ImplementationType)
+        {
+            name = $"Build_{interfaceType}";
+        }
+        else
+        {
+            var implementationType = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                .Replace("::", "_")
+                .Replace(".", "_");
+            name = $"Build_{interfaceType}_{implementationType}";
+        }
+
+        builder.AppendLine($"public static object {name}(IServiceProvider serviceProvider)");
+        builder.OpenBraces();
+        var firstPublicConstructor = this.GetDependencyInjectionConstructor(descriptor);
+        for (var i = 0; i < firstPublicConstructor.Parameters.Length; i++)
+        {
+            var parameter = firstPublicConstructor.Parameters[i];
+            var parameterTypeName = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            builder.AppendLine($"var param_{i} = ({parameterTypeName})serviceProvider.GetService(typeof({parameterTypeName}));");
+        }
+
+        IEnumerable<string> parameterStrings = firstPublicConstructor.Parameters.Select((_, index) =>
+        {
+            string parameterTypeName = _.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return $"param_{index}";
+        });
+        var parametersListExpression = string.Join(", ", parameterStrings);
+        builder.AppendLine($"return new {descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}({parametersListExpression});");
+        builder.CloseBraces();
     }
 
     private void GenerateServiceScopeFactoryClass(IndentedStringBuilder builder, IList<ServiceDescriptor> descriptors)
@@ -253,7 +315,7 @@ public static class StoreKeeperExtensions
         builder.CloseBraces();
     }
 
-    private string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
+    private IMethodSymbol GetDependencyInjectionConstructor(ServiceDescriptor descriptor)
     {
         var namedTypeSymbol = descriptor.ImplementationType as INamedTypeSymbol;
         if (namedTypeSymbol is null)
@@ -262,6 +324,12 @@ public static class StoreKeeperExtensions
         }
 
         var firstPublicConstructor = namedTypeSymbol.InstanceConstructors.First(_ => _.DeclaredAccessibility == Accessibility.Public);
+        return firstPublicConstructor;
+    }
+
+    private string GetInstantiationExpression(ServiceDescriptor descriptor, IList<ServiceDescriptor> descriptors)
+    {
+        var firstPublicConstructor = this.GetDependencyInjectionConstructor(descriptor);
         IEnumerable<string> parameterStrings = firstPublicConstructor.Parameters.Select(_ =>
         {
             string parameterTypeName = _.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -274,6 +342,20 @@ public static class StoreKeeperExtensions
     private string GetServiceBackingField(ServiceDescriptor descriptor)
     {
         return $"_{descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat).Replace('.', '_')}";
+    }
+
+    internal class ServiceDescriptorComparer : IEqualityComparer<ServiceDescriptor>
+    {
+        public bool Equals(ServiceDescriptor x, ServiceDescriptor y)
+        {
+            return x.ImplementationType == y.ImplementationType
+                && x.InterfaceType == y.InterfaceType;
+        }
+
+        public int GetHashCode(ServiceDescriptor obj)
+        {
+            return obj.InterfaceType.GetHashCode() ^ obj.ImplementationType.GetHashCode();
+        }
     }
 
     internal class SyntaxReceiver : ISyntaxContextReceiver

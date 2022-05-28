@@ -111,6 +111,14 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
     }
 }
 
+internal static class ServicesReplacementExtensions
+{
+    public static object Build_global_TestService(IServiceProvider serviceProvider)
+    {
+        return new global::TestService();
+    }
+}
+
 public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
@@ -223,6 +231,14 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
         }
 
         return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+internal static class ServicesReplacementExtensions
+{
+    public static object Build_global_ITestService_global_TestService(IServiceProvider serviceProvider)
+    {
+        return new global::TestService();
     }
 }
 
@@ -343,6 +359,14 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
         }
 
         return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+internal static class ServicesReplacementExtensions
+{
+    public static object Build_global_TestService(IServiceProvider serviceProvider)
+    {
+        return new global::TestService();
     }
 }
 
@@ -860,6 +884,20 @@ public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
         }
 
         return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+internal static class ServicesReplacementExtensions
+{
+    public static object Build_global_DependentTestService(IServiceProvider serviceProvider)
+    {
+        return new global::DependentTestService();
+    }
+
+    public static object Build_global_TestService(IServiceProvider serviceProvider)
+    {
+        var param_0 = (global::DependentTestService)serviceProvider.GetService(typeof(global::DependentTestService));
+        return new global::TestService(param_0);
     }
 }
 
