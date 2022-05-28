@@ -34,6 +34,7 @@ To run test suite
 - [ ] Registrations across assemblies.
 - [ ] Generic Host support.
 - [ ] Services with `internal` visibility.
+- [ ] Add `UseAotServices` method which will replace all service registration within assembly.
 
 # Usage example
 
