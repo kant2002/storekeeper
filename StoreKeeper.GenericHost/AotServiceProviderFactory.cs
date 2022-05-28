@@ -27,7 +27,7 @@ public sealed class AotServiceProviderFactory : IServiceProviderFactory<object>
     /// <inheritdoc/>
     public IServiceProvider CreateServiceProvider(object containerBuilder)
     {
-        var provider = this.services.BuildServiceProviderAot();
+        var provider = this.services.UseAotServices().BuildServiceProvider();
         return provider;
     }
 }
