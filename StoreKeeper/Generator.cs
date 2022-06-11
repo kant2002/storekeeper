@@ -57,6 +57,11 @@ public partial class Generator : ISourceGenerator
         builder.AppendLine();
 
         var descriptors = receiver.DetectedServices;
+        if (descriptors.Count == 0)
+        {
+            return;
+        }
+
         var scopedServices = descriptors.Where(_ => _.Scope == ServiceScope.Scoped).ToList();
         var singletonServices = descriptors.Where(_ => _.Scope == ServiceScope.Singleton).ToList();
 
@@ -420,6 +425,11 @@ public partial class Generator : ISourceGenerator
                     else if (name is IdentifierNameSyntax identifierNameSyntax)
                     {
                         var argument = invocationExpressionSyntax.ArgumentList.Arguments[0];
+                        if (argument.Expression is TypeOfExpressionSyntax)
+                        {
+                            return;
+                        }
+
                         TypeInfo interfaceTypeInfo = GetExpressionType(context, argument);
                         if (interfaceTypeInfo.Type is not null)
                         {

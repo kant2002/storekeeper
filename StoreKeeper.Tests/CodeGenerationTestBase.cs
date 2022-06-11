@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class CodeGenerationTestBase
 {
-    protected string GetGeneratedOutput(string source, NullableContextOptions nullableContextOptions)
+    protected string? GetGeneratedOutput(string source, NullableContextOptions nullableContextOptions)
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(source);
 
@@ -45,9 +45,7 @@ public class CodeGenerationTestBase
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var generateDiagnostics);
         Assert.IsFalse(generateDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error), "Failed: " + generateDiagnostics.FirstOrDefault()?.GetMessage());
 
-        string output = outputCompilation.SyntaxTrees.Last().ToString();
-
-        Console.WriteLine(output);
+        string? output = outputCompilation.SyntaxTrees.LastOrDefault(tree => Path.GetFileName(tree.FilePath) == "ioc_constructor.cs")?.ToString();
 
         return output;
     }

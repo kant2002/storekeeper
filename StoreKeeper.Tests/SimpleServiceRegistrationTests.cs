@@ -28,7 +28,7 @@ class Test
         services.AddScoped<TestService>();
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -170,7 +170,7 @@ class Test
         services.AddScoped<ITestService, TestService>();
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -311,7 +311,7 @@ class Test
         services.AddScoped<TestService>();
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -458,7 +458,7 @@ class Test
         services.AddScoped(new TestService());
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -579,7 +579,7 @@ class Test
         services.AddScoped(() => new TestService());
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -703,7 +703,7 @@ class Test
         services.AddSingleton(new TestService());
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
@@ -853,7 +853,7 @@ class Test
         services.AddScoped<TestService>();
     }
 }";
-        string output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
 
         Assert.IsNotNull(output);
 
