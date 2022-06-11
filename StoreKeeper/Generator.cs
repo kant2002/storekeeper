@@ -186,6 +186,39 @@ public partial class Generator : ISourceGenerator
 
         builder.CloseBraces();
         builder.AppendLine();
+        for (var i = 0; i < staticDetectionServices.Length; i++)
+        {
+            var descriptor = staticDetectionServices[i];
+            this.GenerateNarrowedExtensionMethod(builder, descriptor);
+            builder.AppendLine();
+        }
+    }
+
+    private void GenerateNarrowedExtensionMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        var name = this.GetStaticReplacementFactoryMethod(builder, descriptor);
+        var classHolder = this.GetExtensionClassHolderName(builder, descriptor);
+
+        builder.AppendLine($"internal static class {classHolder}");
+        builder.OpenBraces();
+
+        var helperMethodName = $"Add{descriptor.Scope}";
+        var interfaceTypeName = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (descriptor.InterfaceType == descriptor.ImplementationType)
+        {
+            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService>(this IServiceCollection services) where TService : {interfaceTypeName}");
+        }
+        else
+        {
+            var implementationTypeName = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService, TImplementation>(this IServiceCollection services) where TService : {interfaceTypeName} where TImplementation : {implementationTypeName}");
+        }
+
+        builder.OpenBraces();
+        builder.AppendLine($"return services.AddScoped(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        builder.CloseBraces();
+
+        builder.CloseBraces();
     }
 
     private string GetStaticReplacementFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
@@ -204,6 +237,27 @@ public partial class Generator : ISourceGenerator
                 .Replace("::", "_")
                 .Replace(".", "_");
             name = $"Build_{interfaceType}_{implementationType}";
+        }
+
+        return name;
+    }
+
+    private string GetExtensionClassHolderName(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        string name;
+        var interfaceType = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            .Replace("::", "_")
+            .Replace(".", "_");
+        if (descriptor.InterfaceType == descriptor.ImplementationType)
+        {
+            name = $"{interfaceType}_ServiceExtensions";
+        }
+        else
+        {
+            var implementationType = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                .Replace("::", "_")
+                .Replace(".", "_");
+            name = $"{interfaceType}_{implementationType}_ServiceExtensions";
         }
 
         return name;

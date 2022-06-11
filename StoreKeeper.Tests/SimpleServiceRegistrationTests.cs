@@ -138,6 +138,14 @@ internal static class ServicesReplacementExtensions
     }
 }
 
+internal static class global_TestService_ServiceExtensions
+{
+    public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
+    {
+        return services.AddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
+    }
+}
+
 public static class StoreKeeperExtensions
 {
     public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
@@ -277,6 +285,14 @@ internal static class ServicesReplacementExtensions
         }
 
         return services;
+    }
+}
+
+internal static class global_ITestService_global_TestService_ServiceExtensions
+{
+    public static IServiceCollection AddScoped<TService, TImplementation>(this IServiceCollection services) where TService : global::ITestService where TImplementation : global::TestService
+    {
+        return services.AddScoped(typeof(global::ITestService), ServicesReplacementExtensions.Build_global_ITestService_global_TestService);
     }
 }
 
@@ -424,6 +440,14 @@ internal static class ServicesReplacementExtensions
         }
 
         return services;
+    }
+}
+
+internal static class global_TestService_ServiceExtensions
+{
+    public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
+    {
+        return services.AddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
     }
 }
 
@@ -978,6 +1002,22 @@ internal static class ServicesReplacementExtensions
         }
 
         return services;
+    }
+}
+
+internal static class global_DependentTestService_ServiceExtensions
+{
+    public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::DependentTestService
+    {
+        return services.AddScoped(typeof(global::DependentTestService), ServicesReplacementExtensions.Build_global_DependentTestService);
+    }
+}
+
+internal static class global_TestService_ServiceExtensions
+{
+    public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
+    {
+        return services.AddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
     }
 }
 
