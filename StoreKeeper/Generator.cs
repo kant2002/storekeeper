@@ -186,6 +186,52 @@ public partial class Generator : ISourceGenerator
 
         builder.CloseBraces();
         builder.AppendLine();
+        for (var i = 0; i < staticDetectionServices.Length; i++)
+        {
+            var descriptor = staticDetectionServices[i];
+            this.GenerateNarrowedExtensionMethod(builder, descriptor);
+            builder.AppendLine();
+        }
+    }
+
+    private void GenerateNarrowedExtensionMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        var name = this.GetStaticReplacementFactoryMethod(builder, descriptor);
+        var classHolder = this.GetExtensionClassHolderName(builder, descriptor);
+
+        var namespaceName = descriptor.CallerType?.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var shouldWrapInNamespace = !string.IsNullOrWhiteSpace(namespaceName) && namespaceName != "<global namespace>";
+        if (shouldWrapInNamespace)
+        {
+            builder.AppendLine($"namespace {namespaceName!.Replace("global::", string.Empty)}");
+            builder.OpenBraces();
+        }
+
+        builder.AppendLine($"internal static partial class {classHolder}");
+        builder.OpenBraces();
+
+        var helperMethodName = $"Add{descriptor.Scope}";
+        var interfaceTypeName = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (descriptor.InterfaceType == descriptor.ImplementationType)
+        {
+            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService>(this IServiceCollection services) where TService : {interfaceTypeName}");
+        }
+        else
+        {
+            var implementationTypeName = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService, TImplementation>(this IServiceCollection services) where TService : {interfaceTypeName} where TImplementation : {implementationTypeName}");
+        }
+
+        builder.OpenBraces();
+        builder.AppendLine($"return services.AddScoped(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        builder.CloseBraces();
+
+        builder.CloseBraces();
+
+        if (shouldWrapInNamespace)
+        {
+            builder.CloseBraces();
+        }
     }
 
     private string GetStaticReplacementFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
@@ -204,6 +250,27 @@ public partial class Generator : ISourceGenerator
                 .Replace("::", "_")
                 .Replace(".", "_");
             name = $"Build_{interfaceType}_{implementationType}";
+        }
+
+        return name;
+    }
+
+    private string GetExtensionClassHolderName(IndentedStringBuilder builder, ServiceDescriptor descriptor)
+    {
+        string name;
+        var interfaceType = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            .Replace("::", "_")
+            .Replace(".", "_");
+        if (descriptor.InterfaceType == descriptor.ImplementationType)
+        {
+            name = $"{interfaceType}_ServiceExtensions";
+        }
+        else
+        {
+            var implementationType = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                .Replace("::", "_")
+                .Replace(".", "_");
+            name = $"{interfaceType}_{implementationType}_ServiceExtensions";
         }
 
         return name;
@@ -442,6 +509,7 @@ public partial class Generator : ISourceGenerator
                             {
                                 UseInstance = useInstance,
                                 UseFactory = !useInstance,
+                                CallerType = FindClassDeclaration(identifierNameSyntax, context.SemanticModel),
                             };
                             this.DetectedServices.Add(descriptor);
                         }
@@ -458,6 +526,20 @@ public partial class Generator : ISourceGenerator
                 _ => argument.Expression,
             };
             return context.SemanticModel.GetTypeInfo(expression);
+        }
+
+        private static ITypeSymbol? FindClassDeclaration(SyntaxNode node, SemanticModel model)
+        {
+            foreach (var ansestor in node.Ancestors())
+            {
+                if (ansestor is ClassDeclarationSyntax classDeclarationSyntax)
+                {
+                    var result = model.GetDeclaredSymbol(classDeclarationSyntax) as ITypeSymbol;
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         private void ProcessGenericSyntax(GeneratorSyntaxContext context, GenericNameSyntax genericNameSyntax)
@@ -478,7 +560,10 @@ public partial class Generator : ISourceGenerator
                 ServiceDescriptor descriptor = new ServiceDescriptor(
                     scope,
                     interfaceTypeInfo.Type,
-                    implementationTypeInfo.Type);
+                    implementationTypeInfo.Type)
+                {
+                    CallerType = FindClassDeclaration(genericNameSyntax, context.SemanticModel),
+                };
                 this.DetectedServices.Add(descriptor);
             }
         }
