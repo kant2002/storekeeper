@@ -138,7 +138,7 @@ internal static class ServicesReplacementExtensions
     }
 }
 
-internal static class global_TestService_ServiceExtensions
+internal static partial class global_TestService_ServiceExtensions
 {
     public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
     {
@@ -288,7 +288,7 @@ internal static class ServicesReplacementExtensions
     }
 }
 
-internal static class global_ITestService_global_TestService_ServiceExtensions
+internal static partial class global_ITestService_global_TestService_ServiceExtensions
 {
     public static IServiceCollection AddScoped<TService, TImplementation>(this IServiceCollection services) where TService : global::ITestService where TImplementation : global::TestService
     {
@@ -443,7 +443,7 @@ internal static class ServicesReplacementExtensions
     }
 }
 
-internal static class global_TestService_ServiceExtensions
+internal static partial class global_TestService_ServiceExtensions
 {
     public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
     {
@@ -1005,7 +1005,7 @@ internal static class ServicesReplacementExtensions
     }
 }
 
-internal static class global_DependentTestService_ServiceExtensions
+internal static partial class global_DependentTestService_ServiceExtensions
 {
     public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::DependentTestService
     {
@@ -1013,7 +1013,7 @@ internal static class global_DependentTestService_ServiceExtensions
     }
 }
 
-internal static class global_TestService_ServiceExtensions
+internal static partial class global_TestService_ServiceExtensions
 {
     public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::TestService
     {
@@ -1166,7 +1166,7 @@ internal static class ServicesReplacementExtensions
 
 namespace InternalNamespace.Nested
 {
-    internal static class global_InternalNamespace_Nested_TestService_ServiceExtensions
+    internal static partial class global_InternalNamespace_Nested_TestService_ServiceExtensions
     {
         public static IServiceCollection AddScoped<TService>(this IServiceCollection services) where TService : global::InternalNamespace.Nested.TestService
         {

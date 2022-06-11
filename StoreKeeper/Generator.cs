@@ -207,7 +207,7 @@ public partial class Generator : ISourceGenerator
             builder.OpenBraces();
         }
 
-        builder.AppendLine($"internal static class {classHolder}");
+        builder.AppendLine($"internal static partial class {classHolder}");
         builder.OpenBraces();
 
         var helperMethodName = $"Add{descriptor.Scope}";
