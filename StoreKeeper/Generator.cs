@@ -199,6 +199,14 @@ public partial class Generator : ISourceGenerator
         var name = this.GetStaticReplacementFactoryMethod(builder, descriptor);
         var classHolder = this.GetExtensionClassHolderName(builder, descriptor);
 
+        var namespaceName = descriptor.CallerType?.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var shouldWrapInNamespace = !string.IsNullOrWhiteSpace(namespaceName) && namespaceName != "<global namespace>";
+        if (shouldWrapInNamespace)
+        {
+            builder.AppendLine($"namespace {namespaceName!.Replace("global::", string.Empty)}");
+            builder.OpenBraces();
+        }
+
         builder.AppendLine($"internal static class {classHolder}");
         builder.OpenBraces();
 
@@ -219,6 +227,11 @@ public partial class Generator : ISourceGenerator
         builder.CloseBraces();
 
         builder.CloseBraces();
+
+        if (shouldWrapInNamespace)
+        {
+            builder.CloseBraces();
+        }
     }
 
     private string GetStaticReplacementFactoryMethod(IndentedStringBuilder builder, ServiceDescriptor descriptor)
@@ -496,6 +509,7 @@ public partial class Generator : ISourceGenerator
                             {
                                 UseInstance = useInstance,
                                 UseFactory = !useInstance,
+                                CallerType = FindClassDeclaration(identifierNameSyntax, context.SemanticModel),
                             };
                             this.DetectedServices.Add(descriptor);
                         }
@@ -512,6 +526,20 @@ public partial class Generator : ISourceGenerator
                 _ => argument.Expression,
             };
             return context.SemanticModel.GetTypeInfo(expression);
+        }
+
+        private static ITypeSymbol? FindClassDeclaration(SyntaxNode node, SemanticModel model)
+        {
+            foreach (var ansestor in node.Ancestors())
+            {
+                if (ansestor is ClassDeclarationSyntax classDeclarationSyntax)
+                {
+                    var result = model.GetDeclaredSymbol(classDeclarationSyntax) as ITypeSymbol;
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         private void ProcessGenericSyntax(GeneratorSyntaxContext context, GenericNameSyntax genericNameSyntax)
@@ -532,7 +560,10 @@ public partial class Generator : ISourceGenerator
                 ServiceDescriptor descriptor = new ServiceDescriptor(
                     scope,
                     interfaceTypeInfo.Type,
-                    implementationTypeInfo.Type);
+                    implementationTypeInfo.Type)
+                {
+                    CallerType = FindClassDeclaration(genericNameSyntax, context.SemanticModel),
+                };
                 this.DetectedServices.Add(descriptor);
             }
         }
