@@ -42,16 +42,9 @@ internal class EnglishGreeting : IGreeting
 }
 ```
 
-After the call to `UseAotServices` the service registration would be replaced with pregenerated factory functions approximately identical to this declaration.
-
-```csharp
-var serviceContainer = new ServiceCollection();
-serviceContainer.AddScoped<EnglishGreeting>(services => new EnglishGreeting());
-serviceContainer.AddScoped<IGreeting>(services => new EnglishGreeting());
-var serviceProvider = serviceContainer.UseAotServices().BuildServiceProvider();
-```
-
-If registration of services happens in the multiple assemblies, each assembly should have a call to `UseAotServices`.
+You do not need to do anything except recompilation of the project, after adding library.
+Source generator make sure that your code would work in reflection-free mode. 
+Regular NativeAOT mode can also use better code generation pattern and do not rely on reflection.
 
 # Experimental statically resolving container
 
