@@ -34,6 +34,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -184,6 +185,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -333,6 +335,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -488,6 +491,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -609,6 +613,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -733,6 +738,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -883,6 +889,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -1060,6 +1067,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
@@ -1213,6 +1221,7 @@ class Test
 
         var expectedOutput = @"using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
 {
