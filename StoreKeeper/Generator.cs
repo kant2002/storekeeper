@@ -212,19 +212,28 @@ public partial class Generator : ISourceGenerator
         builder.OpenBraces();
 
         var helperMethodName = $"{descriptor.RegistrationMethod}{descriptor.Scope}";
+        var returnType = descriptor.RegistrationMethod == RegistrationMethod.Add ? "IServiceCollection" : "void";
         var interfaceTypeName = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         if (descriptor.InterfaceType == descriptor.ImplementationType)
         {
-            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService>(this IServiceCollection services) where TService : {interfaceTypeName}");
+            builder.AppendLine($"public static {returnType} {helperMethodName}<TService>(this IServiceCollection services) where TService : {interfaceTypeName}");
         }
         else
         {
             var implementationTypeName = descriptor.ImplementationType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            builder.AppendLine($"public static IServiceCollection {helperMethodName}<TService, TImplementation>(this IServiceCollection services) where TService : {interfaceTypeName} where TImplementation : {implementationTypeName}");
+            builder.AppendLine($"public static {returnType} {helperMethodName}<TService, TImplementation>(this IServiceCollection services) where TService : {interfaceTypeName} where TImplementation : {implementationTypeName}");
         }
 
         builder.OpenBraces();
-        builder.AppendLine($"return services.{descriptor.RegistrationMethod}{descriptor.Scope}(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        if (descriptor.RegistrationMethod == RegistrationMethod.Add)
+        {
+            builder.AppendLine($"return services.{descriptor.RegistrationMethod}{descriptor.Scope}(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        }
+        else
+        {
+            builder.AppendLine($"services.{descriptor.RegistrationMethod}{descriptor.Scope}(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        }
+
         builder.CloseBraces();
 
         builder.CloseBraces();

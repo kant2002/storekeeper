@@ -1328,9 +1328,9 @@ internal static class ServicesReplacementExtensions
 
 internal static partial class global_TestService_ServiceExtensions
 {
-    public static IServiceCollection TryAddScoped<TService>(this IServiceCollection services) where TService : global::TestService
+    public static void TryAddScoped<TService>(this IServiceCollection services) where TService : global::TestService
     {
-        return services.TryAddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
+        services.TryAddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
     }
 }
 

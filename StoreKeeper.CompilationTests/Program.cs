@@ -7,6 +7,7 @@
 namespace StoreKeeper.CompilationTests;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using static System.Console;
 
 internal class Program
@@ -17,7 +18,7 @@ internal class Program
         serviceContainer.AddScoped<EnglishGreeting>();
 
         serviceContainer.AddScoped<DisposableService>();
-        serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
+        serviceContainer.TryAddScoped<IGreeting, EnglishGreeting>();
 
         serviceContainer.AddSingleton(new InstanceService());
         serviceContainer.AddScoped((_) => new InstanceServiceFromFunc());
