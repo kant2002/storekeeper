@@ -1189,4 +1189,154 @@ public static class StoreKeeperExtensions
 ";
         Assert.AreEqual(expectedOutput, output);
     }
+
+    [TestMethod]
+    public void TryRegistrationScopedRegistrationUsingClass()
+    {
+        string source = @"
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+class TestService {}
+
+class Test
+{
+    void Method()
+    {
+        var services = new ServiceCollection();
+        services.TryAddScoped<TestService>();
+    }
+}";
+        string? output = this.GetGeneratedOutput(source, NullableContextOptions.Disable);
+
+        Assert.IsNotNull(output);
+
+        var expectedOutput = @"using System;
+using Microsoft.Extensions.DependencyInjection;
+
+public sealed class ServiceProviderAot : IServiceProvider, System.IDisposable
+{
+    internal ServiceProviderAot(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        this.serviceScopeFactory = new ServiceScopeFactory(services, null);
+        this.implicitScope = serviceScopeFactory.CreateScope();
+    }
+
+    private sealed class ServiceScopeFactory : IServiceScopeFactory
+    {
+        private Microsoft.Extensions.DependencyInjection.IServiceCollection services;
+
+        private IServiceProvider singletonScope;
+
+        public ServiceScopeFactory(Microsoft.Extensions.DependencyInjection.IServiceCollection services, IServiceProvider singletonScope)
+        {
+            this.services = services;
+            this.singletonScope = singletonScope;
+        }
+
+        public IServiceScope CreateScope()
+        {
+            var result = new ScopedServices(this.singletonScope);
+            return result;
+        }
+    }
+
+    private ServiceScopeFactory serviceScopeFactory;
+
+    private Microsoft.Extensions.DependencyInjection.IServiceScope implicitScope;
+
+    public void Dispose()
+    {
+        implicitScope.Dispose();
+    }
+
+    internal class ScopedServices : IServiceProvider, Microsoft.Extensions.DependencyInjection.IServiceScope
+    {
+        private IServiceProvider singletonScope;
+
+        public ScopedServices(IServiceProvider singletonScope)
+        {
+            this.singletonScope = singletonScope;
+        }
+
+        public IServiceProvider ServiceProvider => this;
+
+        public void Dispose()
+        {
+        }
+
+        internal global::TestService _TestService;
+
+        public object GetService(Type t)
+        {
+            if (t == typeof(global::TestService))
+            {
+                _TestService = _TestService ?? new global::TestService();
+                return _TestService;
+            }
+
+            return singletonScope?.GetService(t);
+        }
+    }
+
+    public object GetService(Type t)
+    {
+        if (t == typeof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory))
+        {
+            return serviceScopeFactory;
+        }
+
+        return implicitScope.ServiceProvider.GetService(t);
+    }
+}
+
+internal static class ServicesReplacementExtensions
+{
+    public static object Build_global_TestService(IServiceProvider serviceProvider)
+    {
+        return new global::TestService();
+    }
+
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection UseAotServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        if (services.IsReadOnly)
+        {
+            throw new System.InvalidOperationException(""Cannot apply AOT improvements on read-only services."");
+        }
+
+        for (var i = 0; i < services.Count; i++)
+        {
+            var descriptor = services[i];
+            if (descriptor.ServiceType == typeof(global::TestService) && descriptor.ImplementationType == typeof(global::TestService))
+            {
+                services[i] = new ServiceDescriptor(descriptor.ServiceType, ServicesReplacementExtensions.Build_global_TestService, descriptor.Lifetime);
+            }
+        }
+
+        return services;
+    }
+}
+
+internal static partial class global_TestService_ServiceExtensions
+{
+    public static IServiceCollection TryAddScoped<TService>(this IServiceCollection services) where TService : global::TestService
+    {
+        return services.TryAddScoped(typeof(global::TestService), ServicesReplacementExtensions.Build_global_TestService);
+    }
+}
+
+public static class StoreKeeperExtensions
+{
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.DependencyInjection.ServiceProviderOptions options)
+    {
+        return new ServiceProviderAot(services);
+    }
+    public static ServiceProviderAot BuildServiceProviderAot(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        return new ServiceProviderAot(services);
+    }
+}
+";
+        Assert.AreEqual(expectedOutput, output);
+    }
 }

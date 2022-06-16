@@ -29,4 +29,6 @@ internal class ServiceDescriptor
     public bool IsDisposable => this.ImplementationType.AllInterfaces.Any(_ => _.ToDisplayString() == "System.IDisposable");
 
     public ITypeSymbol? CallerType { get; set; }
+
+    public RegistrationMethod RegistrationMethod { get; set; }
 }

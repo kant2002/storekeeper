@@ -210,7 +210,7 @@ public partial class Generator : ISourceGenerator
         builder.AppendLine($"internal static partial class {classHolder}");
         builder.OpenBraces();
 
-        var helperMethodName = $"Add{descriptor.Scope}";
+        var helperMethodName = $"{descriptor.RegistrationMethod}{descriptor.Scope}";
         var interfaceTypeName = descriptor.InterfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         if (descriptor.InterfaceType == descriptor.ImplementationType)
         {
@@ -223,7 +223,7 @@ public partial class Generator : ISourceGenerator
         }
 
         builder.OpenBraces();
-        builder.AppendLine($"return services.AddScoped(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
+        builder.AppendLine($"return services.{descriptor.RegistrationMethod}{descriptor.Scope}(typeof({interfaceTypeName}), ServicesReplacementExtensions.{name});");
         builder.CloseBraces();
 
         builder.CloseBraces();
@@ -483,7 +483,8 @@ public partial class Generator : ISourceGenerator
 
                 var name = memberAccessException.Name;
                 var x = name.ToString();
-                if (x.StartsWith("AddScoped") || x.StartsWith("AddSingleton") || x.StartsWith("AddTransient"))
+                if (x.StartsWith("AddScoped") || x.StartsWith("AddSingleton") || x.StartsWith("AddTransient")
+                    || x.StartsWith("TryAddScoped") || x.StartsWith("TryAddSingleton") || x.StartsWith("TryAddTransient"))
                 {
                     if (name is GenericNameSyntax genericNameSyntax)
                     {
@@ -501,7 +502,10 @@ public partial class Generator : ISourceGenerator
                         if (interfaceTypeInfo.Type is not null)
                         {
                             var useInstance = argument.Expression is ObjectCreationExpressionSyntax;
-                            var scope = (ServiceScope)Enum.Parse(typeof(ServiceScope), x.Substring(3));
+                            var registrationMethod = x.StartsWith("Try") ? RegistrationMethod.TryAdd : RegistrationMethod.Add;
+                            var scope = (ServiceScope)Enum.Parse(
+                                typeof(ServiceScope),
+                                x.Substring(registrationMethod == RegistrationMethod.Add ? 3 : 6));
                             var descriptor = new ServiceDescriptor(
                                 scope,
                                 interfaceTypeInfo.Type,
@@ -510,6 +514,7 @@ public partial class Generator : ISourceGenerator
                                 UseInstance = useInstance,
                                 UseFactory = !useInstance,
                                 CallerType = FindClassDeclaration(identifierNameSyntax, context.SemanticModel),
+                                RegistrationMethod = registrationMethod,
                             };
                             this.DetectedServices.Add(descriptor);
                         }
@@ -545,7 +550,9 @@ public partial class Generator : ISourceGenerator
         private void ProcessGenericSyntax(GeneratorSyntaxContext context, GenericNameSyntax genericNameSyntax)
         {
             var identifier = genericNameSyntax.Identifier;
-            if (!Enum.TryParse<ServiceScope>(identifier.ToString().Substring(3), out var scope))
+            var x = identifier.ToString();
+            var registrationMethod = x.StartsWith("Try") ? RegistrationMethod.TryAdd : RegistrationMethod.Add;
+            if (!Enum.TryParse<ServiceScope>(x.Substring(registrationMethod == RegistrationMethod.Add ? 3 : 6), out var scope))
             {
                 return;
             }
@@ -563,6 +570,7 @@ public partial class Generator : ISourceGenerator
                     implementationTypeInfo.Type)
                 {
                     CallerType = FindClassDeclaration(genericNameSyntax, context.SemanticModel),
+                    RegistrationMethod = registrationMethod,
                 };
                 this.DetectedServices.Add(descriptor);
             }
