@@ -18,14 +18,13 @@ To run test suite
 
 # AOT preparation example
 
-This library provides `UseAotServices` method which replaces all implicit service construction with
-explicit factory functions. This makes service collection ready for AOT with reflection-free mode.
+This library augment your calls of AddScoped/AddTransient/AddSingleton, etc to make your DI registriation works in reflection-free mode.
 
 ```csharp
 var serviceContainer = new ServiceCollection();
 serviceContainer.AddScoped<EnglishGreeting>();
 serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
-var serviceProvider = serviceContainer.UseAotServices().BuildServiceProvider();
+var serviceProvider = serviceContainer.BuildServiceProvider();
 
 // Registration
 interface IGreeting
@@ -46,6 +45,10 @@ You do not need to do anything except recompilation of the project, after adding
 Source generator make sure that your code would work in reflection-free mode. 
 Regular NativeAOT mode can also use better code generation pattern and do not rely on reflection.
 
+# Samples
+
+Look for samples quick samples https://github.com/kant2002/storekeeper.samples 
+
 # Experimental statically resolving container
 
 Almost identical with ServiceCollection usage except `BuildServiceProviderAot` method produce statically constructed service provider.
@@ -57,7 +60,7 @@ serviceContainer.AddScoped<IGreeting, EnglishGreeting>();
 var serviceProvider = serviceContainer.BuildServiceProviderAot();
 ```
 
-# Implementation plan
+## Implementation plan for experimental statically resolving container
 
 - [x] Scoped registration using class.
 - [x] Scoped registration using interface.
