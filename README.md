@@ -67,7 +67,7 @@ var serviceProvider = serviceContainer.BuildServiceProviderAot();
 - [x] Scoped registration using `Func<T>`.
 - [x] Scoped registration using instance object.
 - [x] Implement disposing scope services.
-- [ ] Implement asyncronous disposing scope services.
+- [ ] Implement asynchronous disposing scope services.
 - [x] Implement singleton services.
 - [ ] Implement transient services.
 - [x] Dependency resolution.
